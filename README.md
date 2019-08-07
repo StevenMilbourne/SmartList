@@ -25,7 +25,6 @@ This must be setup via IFTTT with a webhook.
 The app listens for requests on this URL path and builds a JSON file. The front page of the webapp (/smartmirror) will get the JSON file from the URL (/json) and update the webapp via ajax. 
 
 <h1>Coming Soon</h1>
-A comprehensive setup guide
-A detailed explaination of the range of features
+A comprehensive setup guide and detailed explaination of the full range of features
 
 As this version written in C++ use pistache.io there is no support for running this app on a windows server. There is however a Python version of the Smart Mirror using Flask which runs on any device supporting Python and Flask. I will finalise this version soon.
