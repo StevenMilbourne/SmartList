@@ -1,0 +1,297 @@
+
+<link href='https://fonts.googleapis.com/css?family=Dancing+Script|Indie+Flower|Lobster|Pacifico|Amatic+SC|Josefin+Slab|Open+Sans|Open+Sans+Condensed:300|Inconsolata' rel='stylesheet'>
+<html>
+<meta charset='utf-8'>
+  <body onload ='date_time(); weather(); news(); calendar(); smartlist()'style = 'background:black' >
+    <div id='weather'>
+      <div id='currentTemp'></div>
+      <div id='location'></div>
+      <div id='minMax'></div>
+    </div>
+    <div id = 'dateTime'>
+      <div id='time'></div>
+      <div id='date'></div>
+    </div>
+    <div id='smartlistContainer'>
+      <div id='smartlistTitle'>Smart List</div>
+      <div id='smartlist'></div>
+      <div id='instructions'>To ADD items to the list say 'Hey Google, Smart Mirror add ...' <br>
+        To REMOVE items from the List Say 'Hey Google, Smart Mirror remove ... '<br>
+        To RESET the list say 'Hey Google, Reset the Smart Mirror'<br />
+        Multiple items can be ADDED and REMOVE at the same time if separated by the word "AND" <br />
+      </div>
+    </div><div id='news_container'>
+      <div id='news' style='list-style-type:none;'></div>
+    </div>
+    <div id='calendar_container'>
+      <div id='calendar' style='list-style-type:none;'></div>
+    </div>
+  </body>
+</html>
+
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.core.js'></script>
+<SCRIPT>
+
+
+// DATE AND TIME
+
+function date_time()
+{
+  date = new Date;
+  year = date.getFullYear();
+  month = date.getMonth();
+  months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+  d = date.getDate();
+  day = date.getDay();
+  days = new Array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+  h = date.getHours();
+
+  if(h<10){
+    h = '0'+h;
+  }
+
+  m = date.getMinutes();
+
+  if(m<10){
+    m = '0'+m;
+  }
+
+  date = ''+days[day]+' '+d+' '+months[month]+'  ';
+  document.getElementById('date').innerHTML = date;
+  time = ''+h+':'+m;
+  document.getElementById('time').innerHTML = time;
+  setTimeout('date_time();','30000');
+  return true;
+}
+
+
+// WEATHER
+
+function weather() {
+  // strings for constructing request
+  var apiKey = '044cd9767fbdc638a1b48919c1cbecd2';
+  var URL = 'http://api.openweathermap.org/data/2.5/weather';
+  var city = 'Reading,uk';
+  var units = 'metric';
+
+  function buildURL() {
+    return URL + '?q='+city+'&units='+units+'&APPID=' + apiKey;
+  }
+
+  function display(url) {
+    $.getJSON(url, function(weather) {
+      $('#currentTemp').text(Math.round(weather.main.temp) + '°C');
+		  $('#location').text(weather.name);
+		  console.log(weather);
+    });
+  }
+
+  function refresh(){
+    display(buildURL());
+    setTimeout('weather()',60000);
+  }
+
+  refresh();
+};
+
+// NEWS
+
+function news(){
+	var $news = $('#news');
+	$.ajax({
+		type:'GET',
+		url:'https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey=8d60141852024bbfb4f158baca362917',
+		success: function(data){
+			$.each(data.articles, function(i, item){
+			  setTimeout(function(){
+				  $news.html('<p>'+data.articles[i].title +'</p>');
+			  }, i * 10000);
+			});
+		}
+	});
+
+};setInterval('news()', 100000);
+
+
+// Date
+
+function dateTime(str) {
+  var date = str.split("T");
+  var date  = date[0];
+  var dateOrdered = date[8]+ date[9]+ date[7]+date[5]+date[6]+date[4]+date[0]+date[1]+date[2]+date[3];
+
+ 	res = str.split("+");
+  var time = res[0];
+  var hour = time[11] + time[12];
+  var minute = time[14] + time[15];
+
+  if(hour[0] == "0" || hour[0] == "1" && hour[1] == "1"){
+  	hour.toString();
+  	hour = hour.replace('0', '');
+      minute += 'am';
+  }
+  else{
+  	Number(hour);
+  	if (hour =="12"){
+    	minute += "pm";
+    }
+    else{
+    	hour = hour -12;
+  		minute += "pm";
+  	}
+  }
+	var dateTime= '<strong>Time:	</strong>' +hour+ ':' +minute+ '<br><strong>Date:	</strong>' +dateOrdered;
+  return dateTime;
+}
+
+
+// Smart List
+
+var current, previous;
+var $smartlist = $('#smarlist');
+
+function smartlist(){
+	$.ajax({
+  	type:'GET',
+  	url:'/json',
+  	success: function(data){
+  		current = JSON.stringify(data);
+      console.log(data);
+  			if (previous != current) {
+          console.log("diff")
+          $('#smartlist').empty();
+
+          for (var i = 0; i < data["list"].length; i++){
+            document.getElementById('smartlist').innerHTML+=data["list"][i]["name"] + " ";
+              if (data["list"][i]["weightunit"] != ""){
+              document.getElementById('smartlist').innerHTML+=data["list"][i]["quantity"] + "<emsp>";
+              }
+              else if (data["list"][i]["quantity"] > 1) {
+                document.getElementById('smartlist').innerHTML+=data["list"][i]["quantity"] + "<emsp>";
+              }
+            document.getElementById('smartlist').innerHTML+=data["list"][i]["weightunit"] + "<br />";
+          }
+  			}
+  		previous = current;
+  	}
+  });
+};setInterval('smartlist()', 1000);
+
+
+// Calendar
+
+var currentdata, previousdata;
+var $calendar = $('#calendar');
+
+function calendar(){
+	$.ajax({
+		type:'GET',
+		url:'https://www.googleapis.com/calendar/v3/calendars/steven.milbourne@gmail.com/events?key=AIzaSyCfKps1V1slK1fHwJIxoSKQfD32vbTxEX0&orderBy=startTime&singleEvents=true&timeMin='+ new Date().toISOString(),
+		success: function(data){
+			current = JSON.stringify(data);
+				if (previousdata !== current) {
+					$('#calendar').empty();
+					$.each(data.items, function(i, item){
+					  $calendar.append('<div id = "calendarItem"><img src="https://cdn4.iconfinder.com/data/icons/small-n-flat/24/calendar-512.png" height = "55" width="55" style="float: left;"></img><p><strong>Event:	</strong>'+data.items[i].summary +'<br> ' +dateTime(data.items[i].start.dateTime) +'</p></div>');
+					});
+				}
+			previousdata = current;
+		}
+	});
+};setInterval('calendar()', 10000);
+
+
+</script>
+
+<style>
+  body {
+    font-family: 'Open Sans';
+    color:white; font-size:30px;
+    text-transform:capitalize;
+    transition: opacity 10s ease-in
+  }
+
+  h1 {
+    text-align:center;
+    font-size:90px;
+    font-weight:500;
+    margin-bottom:10%;
+    font-family:'Dancing Script';
+  }
+
+  #weather{
+    position: absolute;
+     left: 20px;
+     text-align:center;
+  }
+
+  #location{
+    margin-top: -15px;
+    color: #b4b0b0;
+    font-size: 45px;
+  }
+
+  #currentTemp{
+    font-size: 110px;
+  }
+
+  #smartlistContainer{
+   height: 50%;
+   width: 50%;
+   font-family: 'Indie Flower';
+   position: absolute;
+   bottom: 20;
+   }
+
+   #smartlistTitle{
+    text-align: center;
+  }
+
+  #smartlist {
+    columns: 100px 2;
+    font-size: 20px;
+    margin-top: 50px;
+    margin-left: 20px;
+    height: 60%;
+  }
+
+  #instructions {
+    font-size: 14px;
+    margin-left: 15px;
+  }
+
+  #dateTime {
+    position: absolute;
+    right: 30px;
+    text-align: center;
+  }
+
+  #date {
+    color: #b4b0b0;
+    text-align: center;
+  }
+
+  #time {
+    font-size: 110px;
+  }
+
+  #news_container {
+    position: absolute;
+    width: 800px;
+    height: 200px;
+    z-index: 15;
+    top: 30%;
+    left: 50%;
+    margin: -100px 0 0 -250px;
+  }
+
+  #calendar_container{
+    right:0px;
+    bottom:30px;
+    position:absolute;
+    font-size:15px;
+    width:30%;
+  }
+
+</style>
