@@ -187,7 +187,7 @@ var $calendar = $('#calendar');
 function calendar(){
 	$.ajax({
 		type:'GET',
-		url:'https://www.googleapis.com/calendar/v3/calendars/steven.milbourne@gmail.com/events?key=AIzaSyCfKps1V1slK1fHwJIxoSKQfD32vbTxEX0&orderBy=startTime&singleEvents=true&timeMin='+ new Date().toISOString(),
+		url:'https://www.googleapis.com/calendar/v3/calendars/steven.milbourne@gmail.com/events?key=YOURAPIKEYHERE&orderBy=startTime&singleEvents=true&timeMin='+ new Date().toISOString(),
 		success: function(data){
 			current = JSON.stringify(data);
 				if (previousdata !== current) {
