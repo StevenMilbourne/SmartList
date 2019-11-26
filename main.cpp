@@ -17,8 +17,6 @@ public:
 
     void onRequest(const Http::Request& request, Http::ResponseWriter response) override{
         UNUSED(request);
-		
-		// Figure out a way to snowboy into str, split str to reqs, then req separately as post, delete etc
         
         if (request.resource() == "/") {
             if (request.method() == Http::Method::Post ) {
